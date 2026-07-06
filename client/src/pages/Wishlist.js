@@ -9,7 +9,7 @@ function Wishlist() {
 
   useEffect(() => {
     fetchWishlist();
-  }, [fetchWishlist]);
+  }, []);
 
   const fetchWishlist = async () => {
     try {

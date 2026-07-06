@@ -24,12 +24,7 @@ function BookDetails() {
   fetchReviews();
   fetchAverageRating();
   fetchRecommendedBooks();
-}, [
-  fetchBook,
-  fetchReviews,
-  fetchAverageRating,
-  fetchRecommendedBooks,
-]);
+}, [id]);
 
   const fetchBook = async () => {
     try {

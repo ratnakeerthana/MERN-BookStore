@@ -9,7 +9,7 @@ function Reservations() {
 
   useEffect(() => {
     fetchReservations();
-  }, [fetchReservations]);
+  }, []);
 
   const fetchReservations = async () => {
     try {
