@@ -19,12 +19,7 @@ function BookDetails() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-  fetchBook();
-  fetchReviews();
-  fetchAverageRating();
-  fetchRecommendedBooks();
-}, [id]);
+  
 
   const fetchBook = async () => {
     try {
@@ -61,6 +56,12 @@ function BookDetails() {
       console.log(error);
     }
   };
+  useEffect(() => {
+  fetchBook();
+  fetchReviews();
+  fetchAverageRating();
+  fetchRecommendedBooks();
+}, [id]);
 
   const submitReview = async () => {
     if (!token) {

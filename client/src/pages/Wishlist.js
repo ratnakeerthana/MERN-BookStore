@@ -7,9 +7,7 @@ function Wishlist() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
+
 
   const fetchWishlist = async () => {
     try {
@@ -25,6 +23,9 @@ function Wishlist() {
       toast.error("Failed to load wishlist");
     }
   };
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
 
   const removeBook = async (id) => {
     try {

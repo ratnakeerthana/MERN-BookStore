@@ -7,9 +7,7 @@ function Reservations() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchReservations();
-  }, []);
+  
 
   const fetchReservations = async () => {
     try {
@@ -24,6 +22,9 @@ function Reservations() {
       toast.error("Failed to load reservations");
     }
   };
+  useEffect(() => {
+    fetchReservations();
+  }, []);
 
   const cancelReservation = async (id) => {
     try {
