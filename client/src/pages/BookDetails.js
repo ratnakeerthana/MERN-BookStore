@@ -20,11 +20,16 @@ function BookDetails() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetchBook();
-    fetchReviews();
-    fetchRecommendedBooks();
-    fetchAverageRating();
-  }, [id]);
+  fetchBook();
+  fetchReviews();
+  fetchAverageRating();
+  fetchRecommendedBooks();
+}, [
+  fetchBook,
+  fetchReviews,
+  fetchAverageRating,
+  fetchRecommendedBooks,
+]);
 
   const fetchBook = async () => {
     try {
