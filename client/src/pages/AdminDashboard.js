@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import API from "../services/api";
 
 function AdminDashboard() {
@@ -11,46 +11,45 @@ function AdminDashboard() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState(null);
+
   const [editing, setEditing] = useState(false);
-const [editId, setEditId] = useState("");
-const [stats, setStats] = useState({
-  totalBooks: 0,
-  totalUsers: 0,
-  totalOrders: 0,
-  totalRevenue: 0,
-});
+  const [editId, setEditId] = useState("");
+
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    totalUsers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+  });
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchBooks();
-    fetchOrders();
-    fetchStats();
-  }, []);
-  const fetchStats = async () => {
-  try {
-    const res = await API.get("/admin/stats", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  // ===================== FETCH FUNCTIONS =====================
 
-    setStats(res.data);
-  } catch (error) {
-    console.log(error);
-  }
-};
+  const fetchStats = useCallback(async () => {
+    try {
+      const res = await API.get("/admin/stats", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  const fetchBooks = async () => {
+      setStats(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }, [token]);
+
+  const fetchBooks = useCallback(async () => {
     try {
       const res = await API.get("/books");
       setBooks(res.data);
     } catch (error) {
       console.log(error);
     }
-  };
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const res = await API.get("/orders", {
         headers: {
@@ -62,80 +61,90 @@ const [stats, setStats] = useState({
     } catch (error) {
       console.log(error);
     }
-  };
+  }, [token]);
+
+  // ===================== USE EFFECT =====================
+
+  useEffect(() => {
+    fetchBooks();
+    fetchOrders();
+    fetchStats();
+  }, [fetchBooks, fetchOrders, fetchStats]);
+
+  // ===================== CRUD OPERATIONS =====================
 
   const addBook = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    let imageUrl = "";
+    try {
+      let imageUrl = "";
 
-    if (image) {
-      const formData = new FormData();
-      formData.append("image", image);
+      if (image) {
+        const formData = new FormData();
+        formData.append("image", image);
 
-      const uploadRes = await API.post("/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      imageUrl = uploadRes.data.imageUrl;
-    }
-
-    if (editing) {
-      await API.put(
-        `/books/${editId}`,
-        {
-          title,
-          author,
-          category,
-          price,
-          ...(imageUrl && { image: imageUrl }),
-        },
-        {
+        const uploadRes = await API.post("/upload", formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
-        }
-      );
+        });
 
-      toast.success("Book updated Successfully");
-    } else {
-      await API.post(
-        "/books",
-        {
-          title,
-          author,
-          category,
-          price,
-          image: imageUrl,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        imageUrl = uploadRes.data.imageUrl;
+      }
+
+      if (editing) {
+        await API.put(
+          `/books/${editId}`,
+          {
+            title,
+            author,
+            category,
+            price,
+            ...(imageUrl && { image: imageUrl }),
           },
-        }
-      );
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      toast.success("Book Added Successfully");
+        toast.success("Book updated Successfully");
+      } else {
+        await API.post(
+          "/books",
+          {
+            title,
+            author,
+            category,
+            price,
+            image: imageUrl,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        toast.success("Book Added Successfully");
+      }
+
+      setEditing(false);
+      setEditId("");
+
+      setTitle("");
+      setAuthor("");
+      setCategory("");
+      setPrice("");
+      setImage(null);
+
+      fetchBooks();
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Operation Failed");
     }
-
-    setEditing(false);
-    setEditId("");
-
-    setTitle("");
-    setAuthor("");
-    setCategory("");
-    setPrice("");
-    setImage(null);
-
-    fetchBooks();
-  } catch (error) {
-    console.log(error);
-    toast.error(error.response?.data?.message || "Operation Failed");
-  }
-};
+  };
 
   const deleteBook = async (id) => {
     try {
@@ -149,21 +158,20 @@ const [stats, setStats] = useState({
       fetchBooks();
     } catch (error) {
       console.log(error);
-      toast.success("Book deleted Successfully");
+      toast.error("Failed to delete book");
     }
   };
+
   const editBook = (book) => {
-  setEditing(true);
-  setEditId(book._id);
+    setEditing(true);
+    setEditId(book._id);
 
-  setTitle(book.title);
-  setAuthor(book.author);
-  setCategory(book.category);
-  setPrice(book.price);
-
-  // Clear image selection. User can choose a new image if desired.
-  setImage(null);
-};
+    setTitle(book.title);
+    setAuthor(book.author);
+    setCategory(book.category);
+    setPrice(book.price);
+    setImage(null);
+  };
 
   const updateStatus = async (id, status) => {
     try {
@@ -177,7 +185,7 @@ const [stats, setStats] = useState({
         }
       );
 
-      toast.success("order status updated");
+      toast.success("Order status updated");
       fetchOrders();
     } catch (error) {
       console.log(error);
@@ -185,49 +193,52 @@ const [stats, setStats] = useState({
     }
   };
 
+  // ===================== UI =====================
+
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Admin Dashboard</h2>
+
+      {/* STATS */}
       <div className="row mb-4">
+        <div className="col-md-3">
+          <div className="card text-center bg-primary text-white">
+            <div className="card-body">
+              <h5>Total Books</h5>
+              <h2>{stats.totalBooks}</h2>
+            </div>
+          </div>
+        </div>
 
-  <div className="col-md-3">
-    <div className="card text-center bg-primary text-white">
-      <div className="card-body">
-        <h5>Total Books</h5>
-        <h2>{stats.totalBooks}</h2>
+        <div className="col-md-3">
+          <div className="card text-center bg-success text-white">
+            <div className="card-body">
+              <h5>Total Users</h5>
+              <h2>{stats.totalUsers}</h2>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card text-center bg-warning text-dark">
+            <div className="card-body">
+              <h5>Total Orders</h5>
+              <h2>{stats.totalOrders}</h2>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-3">
+          <div className="card text-center bg-danger text-white">
+            <div className="card-body">
+              <h5>Total Revenue</h5>
+              <h2>₹{stats.totalRevenue}</h2>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div className="col-md-3">
-    <div className="card text-center bg-success text-white">
-      <div className="card-body">
-        <h5>Total Users</h5>
-        <h2>{stats.totalUsers}</h2>
-      </div>
-    </div>
-  </div>
-
-  <div className="col-md-3">
-    <div className="card text-center bg-warning text-dark">
-      <div className="card-body">
-        <h5>Total Orders</h5>
-        <h2>{stats.totalOrders}</h2>
-      </div>
-    </div>
-  </div>
-
-  <div className="col-md-3">
-    <div className="card text-center bg-danger text-white">
-      <div className="card-body">
-        <h5>Total Revenue</h5>
-        <h2>₹{stats.totalRevenue}</h2>
-      </div>
-    </div>
-  </div>
-
-</div>
-
+      {/* ADD / EDIT BOOK */}
       <div className="card p-4 mb-5">
         <h3>{editing ? "Edit Book" : "Add New Book"}</h3>
 
@@ -273,28 +284,30 @@ const [stats, setStats] = useState({
           />
 
           <button type="submit" className="btn btn-success">
-  {editing ? "Update Book" : "Add Book"}
-</button>
-{editing && (
-  <button
-    type="button"
-    className="btn btn-secondary ms-2"
-    onClick={() => {
-      setEditing(false);
-      setEditId("");
-      setTitle("");
-      setAuthor("");
-      setCategory("");
-      setPrice("");
-      setImage(null);
-    }}
-  >
-    Cancel
-  </button>
-)}
+            {editing ? "Update Book" : "Add Book"}
+          </button>
+
+          {editing && (
+            <button
+              type="button"
+              className="btn btn-secondary ms-2"
+              onClick={() => {
+                setEditing(false);
+                setEditId("");
+                setTitle("");
+                setAuthor("");
+                setCategory("");
+                setPrice("");
+                setImage(null);
+              }}
+            >
+              Cancel
+            </button>
+          )}
         </form>
       </div>
 
+      {/* BOOK LIST */}
       <h3>Books</h3>
 
       {books.length === 0 ? (
@@ -316,34 +329,32 @@ const [stats, setStats] = useState({
             )}
 
             <h5>{book.title}</h5>
-
             <p><strong>Author:</strong> {book.author}</p>
-
             <p><strong>Category:</strong> {book.category}</p>
-
             <p><strong>Price:</strong> ₹{book.price}</p>
 
             <div className="d-flex gap-2">
-  <button
-    className="btn btn-warning"
-    onClick={() => editBook(book)}
-  >
-    Edit
-  </button>
+              <button
+                className="btn btn-warning"
+                onClick={() => editBook(book)}
+              >
+                Edit
+              </button>
 
-  <button
-    className="btn btn-danger"
-    onClick={() => deleteBook(book._id)}
-  >
-    Delete
-  </button>
-</div>
+              <button
+                className="btn btn-danger"
+                onClick={() => deleteBook(book._id)}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))
       )}
 
       <hr className="my-5" />
 
+      {/* ORDERS */}
       <h3>Customer Orders</h3>
 
       {orders.length === 0 ? (
@@ -351,22 +362,10 @@ const [stats, setStats] = useState({
       ) : (
         orders.map((order) => (
           <div key={order._id} className="card p-3 mb-3">
-
-            <p>
-              <strong>Customer:</strong> {order.user?.name}
-            </p>
-
-            <p>
-              <strong>Email:</strong> {order.user?.email}
-            </p>
-
-            <p>
-              <strong>Total:</strong> ₹{order.totalPrice}
-            </p>
-
-            <p>
-              <strong>Status:</strong> {order.status}
-            </p>
+            <p><strong>Customer:</strong> {order.user?.name}</p>
+            <p><strong>Email:</strong> {order.user?.email}</p>
+            <p><strong>Total:</strong> ₹{order.totalPrice}</p>
+            <p><strong>Status:</strong> {order.status}</p>
 
             <select
               className="form-select"
