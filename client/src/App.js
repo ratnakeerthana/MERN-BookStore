@@ -1,108 +1,47 @@
-import { useEffect, useState } from "react";
-import API from "./services/api";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
 
 import Navbar from "./components/Navbar";
-import BookForm from "./components/BookForm";
-import BookList from "./components/BookList";
+import Footer from "./components/Footer";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Cart from "./pages/Cart";
+import Orders from "./pages/Orders";
+import BookDetails from "./pages/BookDetails";
+import AdminDashboard from "./pages/AdminDashboard";
+import Wishlist from "./pages/Wishlist";
+import Reservations from "./pages/Reservations";
 
 function App() {
-  const [books, setBooks] = useState([]);
-
-  const [newBook, setNewBook] = useState({
-    title: "",
-    author: "",
-    price: "",
-    category: "",
-    description: "",
-    stock: "",
-    image: "",
-  });
-
-  const [editId, setEditId] = useState(null);
-
-  // Fetch all books
-  const fetchBooks = () => {
-    API.get("/books")
-      .then((res) => setBooks(res.data))
-      .catch((err) => console.log(err));
-  };
-
-  useEffect(() => {
-    fetchBooks();
-  }, []);
-
-  // Handle form input
-  const handleChange = (e) => {
-    setNewBook({
-      ...newBook,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // Add or Update Book
-  const addBook = async () => {
-    try {
-      if (editId) {
-        await API.put(`/books/${editId}`, newBook);
-      } else {
-        await API.post("/books", newBook);
-      }
-
-      fetchBooks();
-
-      setNewBook({
-        title: "",
-        author: "",
-        price: "",
-        category: "",
-        description: "",
-        stock: "",
-        image: "",
-      });
-
-      setEditId(null);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Delete Book
-  const deleteBook = async (id) => {
-    try {
-      await API.delete(`/books/${id}`);
-      fetchBooks();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  // Edit Book
-  const editBook = (book) => {
-    setNewBook(book);
-    setEditId(book._id);
-  };
-
   return (
-    <div>
+    <BrowserRouter>
       <Navbar />
 
-      <div className="container">
-        <BookForm
-          newBook={newBook}
-          handleChange={handleChange}
-          addBook={addBook}
-          editId={editId}
-        />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/book/:id" element={<BookDetails />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/reservations" element={<Reservations />} />
+      </Routes>
 
-        <hr />
+      <Footer />
 
-        <BookList
-          books={books}
-          deleteBook={deleteBook}
-          editBook={editBook}
-        />
-      </div>
-    </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
+    </BrowserRouter>
   );
 }
 
