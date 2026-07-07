@@ -21,7 +21,7 @@ router.post("/", upload.single("image"), (req, res) => {
 
     res.status(200).json({
       message: "Image uploaded successfully",
-      imageUrl: `http://localhost:5000/uploads/${req.file.filename}`,
+      imageUrl: `https://mern-bookstore-2-gt1e.onrender.com/uploads/${req.file.filename}`,
     });
   } catch (error) {
     res.status(500).json({
