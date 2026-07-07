@@ -1,33 +1,24 @@
 const express = require("express");
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
+
 const router = express.Router();
 
-const upload = require("../middleware/uploadMiddleware");
-
-// Test Route
-router.get("/test", (req, res) => {
-  res.json({
-    message: "Upload route is working",
-  });
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "bookstore",
+    allowed_formats: ["jpg", "jpeg", "png"],
+  },
 });
 
-// Upload Image
-router.post("/", upload.single("image"), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
-        message: "No image uploaded",
-      });
-    }
+const upload = multer({ storage });
 
-    res.status(200).json({
-      message: "Image uploaded successfully",
-      imageUrl: `https://mern-bookstore-2-gt1e.onrender.com/uploads/${req.file.filename}`,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+router.post("/", upload.single("image"), (req, res) => {
+  res.json({
+    imageUrl: req.file.path,
+  });
 });
 
 module.exports = router;
